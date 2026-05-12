@@ -1,10 +1,9 @@
+#!/usr/bin/ucode
+
 #
 #    ppmm 2026
 #    Wi-Tech 2026
 #
-
-
-#!/usr/bin/ucode
 
 import { cursor } from 'uci';
 import { popen } from 'fs';
