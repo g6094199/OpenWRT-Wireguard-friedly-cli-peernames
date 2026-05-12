@@ -1,0 +1,74 @@
+#
+#    ppmm 2026
+#    Wi-Tech 2026
+#
+
+
+#!/usr/bin/ucode
+
+import { cursor } from 'uci';
+import { popen } from 'fs';
+
+// ANSI-colorcodes
+const GREEN        = '\x1b[32m';
+const LIGHT_GREEN  = '\x1b[92m';
+const YELLOW       = '\x1b[33m';
+const CYAN         = '\x1b[36m';
+const BOLD         = '\x1b[1m';
+const RESET        = '\x1b[0m';
+
+function get_key_name() {
+    let d = {};
+    let ctx = cursor();
+    if (!ctx || !ctx.load('network')) return d;
+
+    ctx.foreach('network', 'interface', function (intf) {
+        if (intf["proto"] == 'wireguard') {
+            let section = intf[".name"];
+            // Interface-Name in Grün
+            d[`: ${section}`] = `: ${GREEN}${section}${RESET}`;
+
+            ctx.foreach('network', `wireguard_${section}`, function (peer) {
+                let pubkey = peer["public_key"];
+                if (pubkey) {
+                    d[pubkey] = `${YELLOW}${pubkey}${RESET} (${LIGHT_GREEN}${peer["description"] || "unbekannt"}${RESET})`;
+                }
+            });
+        }
+    });
+    return d;
+}
+
+let wg_output = popen('wg show all', 'r');
+if (!wg_output) die("error: could not open 'wg'. is it installed?.\n");
+
+let buf = wg_output.read('all');
+wg_output.close();
+
+let keys = get_key_name();
+
+// colorize words 
+buf = replace(buf, "interface", `${LIGHT_GREEN}interface${RESET}`);
+buf = replace(buf, "peer", `${YELLOW}peer${RESET}`);
+buf = replace(buf, /minute[s]?/g, `${CYAN}minute${RESET}`);
+buf = replace(buf, /second[s]?/g, `${CYAN}seconds${RESET}`);
+buf = replace(buf, "GiB", `${CYAN}GiB${RESET}`);
+
+// replace words
+for (let key in keys) {
+    buf = replace(buf, key, keys[key]);
+}
+
+// bold keywords
+// ^([ ]*)  -> search for spaces at line begining
+// ([^:]+)  -> get everything up to ":"
+// :        -> ":" itself
+
+let lines = split(buf, "\n");
+for (let i = 0; i < length(lines); i++) {
+    // search for ":" and bold everything before
+    lines[i] = replace(lines[i], /^([^:]+):/, BOLD + "$1" + RESET + ":");
+}
+buf = join("\n", lines);
+
+print(buf);
