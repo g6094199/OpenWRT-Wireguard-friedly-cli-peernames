@@ -16,6 +16,6 @@ Now the script can executed from everywhere with <br>
 >  wg-friendly
 
 It will show the output of wg with the enhancement of the friendly peer names greped from the network config. <br>
-He is an example of the output of wg va wg-friendly. <br>
+He is an example of the output of wg vs wg-friendly. <br>
 
 ![wg vs wg-friendly](wg-vs-wg-friendly.png "wg vs wg-friendly")
